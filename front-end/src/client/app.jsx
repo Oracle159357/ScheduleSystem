@@ -4,7 +4,7 @@ import {
     Route,
     Link
 } from 'react-router-dom'
-import {Menu} from 'semantic-ui-react'
+import {Menu , Label} from 'semantic-ui-react'
 import './app.scss';
 import {Lecture} from "ui/TaskList/Lecture";
 import {Departament} from "ui/TaskList/Departament";
@@ -12,10 +12,26 @@ import {Room} from "ui/TaskList/Room";
 import {Subject} from "ui/TaskList/Subject";
 import {Group} from "ui/TaskList/Group";
 import {Teacher} from "ui/TaskList/Teacher";
-
+import DepartamentWithRedux from "./ui/TaskList/DepartamentWithRedux";
+import GroupWithRedux from "./ui/TaskList/GroupWithRedux";
+import TeacherWithRedux from "./ui/TaskList/TeacherWithRedux";
+import RoomWithRedux from "./ui/TaskList/RoomWithRedux";
+import SubjectWithRedux from "./ui/TaskList/SubjectWithRedux";
+import LectureWithRedux from "./ui/TaskList/LectureWithRedux";
 export default () => {
     return (
-        <Router>
+        /*<div>
+            <div align="center" className='header'>
+                  <Label size="big">Departament</Label>
+            </div>
+            <DepartamentWithRedux />
+            <GroupWithRedux />
+            <TeacherWithRedux />
+            <RoomWithRedux />
+            <SubjectWithRedux />
+        </div>*/
+
+       <Router>
             <div>
                 <Menu>
                     <Menu.Item as={Link} to='/departament'>
@@ -38,19 +54,14 @@ export default () => {
                     </Menu.Item>
                 </Menu>
 
-                <Route exact path="/departament" component={Departament}/>
-                <Route exact path="/group" component={Group}/>
-                <Route exact path="/teacher" component={Teacher}/>
-                <Route exact path="/room" component={Room}/>
-                <Route exact path="/subject" component={Subject}/>
-                <Route exact path="/lecture" component={Lecture}/>
+                <Route exact path="/departament" component={DepartamentWithRedux}/>
+                <Route exact path="/group" component={GroupWithRedux}/>
+                <Route exact path="/teacher" component={TeacherWithRedux}/>
+                <Route exact path="/room" component={RoomWithRedux}/>
+                <Route exact path="/subject" component={SubjectWithRedux}/>
+                <Route exact path="/lecture" component={LectureWithRedux}/>
             </div>
         </Router>
-        // <div>
-        //     <div align="center" className='header'>
-        //       {/*  <Label size="big">Departament</Label>*/}
-        //     </div>
-        //     <TaskList />
-        // </div>
+
     );
 }

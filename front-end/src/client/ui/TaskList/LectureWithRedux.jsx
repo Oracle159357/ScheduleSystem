@@ -1,24 +1,18 @@
-import {PureComponent} from "react";
-import {
-    getAllGroup,
-    getAllLecture,
-    getAllRoom,
-    getAllSubject,
-    getAllTeacher,
-    insertLecture,
-    removeLecture1
-} from "../../api/fetchOfData";
+import React, {PureComponent} from 'react';
+import {connect} from 'react-redux'
+
 import {Button, Dropdown, Form, Grid, Header, Input, Modal, Table} from "semantic-ui-react";
-import React from "react";
-export class Lecture extends PureComponent {
+import {getSubjects} from "../../thunks/subject";
+import {getRooms} from "../../thunks/room";
+import {getTeachers} from "../../thunks/teacher";
+import {getLectures, addLecture, deleteLecture} from "../../thunks/lectures";
+import {getGroups} from "../../thunks/group";
+import {Lecture} from "./Lecture";
+export class LectureWithRedux extends PureComponent {
     constructor(props) {
         super(props);
 
         this.state = {
-            groups: [],
-            teachers: [],
-            rooms: [],
-            subjects: [],
             newItemLecture: {Day: '', Week: '', Lesson: '', TeacherId: '', GroupId: '', RoomId: '', SubjectId: ''},
             lectures: [],
             TeacherId: '',
@@ -37,47 +31,38 @@ export class Lecture extends PureComponent {
         this.loadGroup();
         this.loadLecture();
     }
-
-    async addLecture(lecture) {
-        await insertLecture(lecture)
-        await this.loadLecture()
+    loadSubject(){
+        this.props.GetSubjectL();
     }
-
-    async removeLecture(Id) {
-        await removeLecture1(Id);
-        await this.loadLecture()
+    loadRoom(){
+        this.props.GetRoomL();
     }
-
-    async loadRoom() {
-        let rooms = await getAllRoom();
-        rooms.sort((x, y) => -y.RomPk + x.RomPk);
-        this.setState({rooms});
+    loadTeacher(){
+        this.props.GetTeacherL();
     }
-
-    async loadLecture() {
-        let lectures = await getAllLecture();
-        lectures.sort((x, y) => -y.LctPk + x.LctPk);
-        this.setState({lectures});
+    loadGroup(){
+        this.props.GetGroupL();
     }
-
-    async loadSubject() {
-        let subjects = await getAllSubject();
-        subjects.sort((x, y) => -y.SbjPk + x.SbjPk);
-        this.setState({subjects});
+    loadLecture(){
+        this.props.GetLecture();
     }
-
-    async loadTeacher() {
-        let teachers = await getAllTeacher();
-        teachers.sort((x, y) => -y.TchPk + x.TchPk);
-        this.setState({teachers});
-    }
-
-    async loadGroup() {
-        let groups = await getAllGroup();
-        groups.sort((x, y) => -y.GrpPk + x.GrpPk);
-        this.setState({groups});
-    }
-
+    addLecture = () => {
+        this.props.AddLecture(this.state.newItemLecture)
+        this.setState({
+            newItemLecture: {
+                Day: '',
+                Week: '',
+                Lesson: '',
+                TeacherId: '',
+                GroupId: '',
+                RoomId: '',
+                SubjectId: ''
+            }
+        });
+    };
+    removeLecture = (lecture) => {
+        this.props.RemoveLecture(lecture.DepPk)
+    };
     render() {
         const {
             TeacherId,
@@ -140,7 +125,7 @@ export class Lecture extends PureComponent {
                         <Grid.Column>
                             <Dropdown fluid={true}
                                       selection
-                                      options={this.state.teachers.map((teacher, index) => (
+                                      options={this.props.teachers.map((teacher, index) => (
                                               {
                                                   key: index, text: teacher.Name, value: teacher.TchPk
                                               }
@@ -155,7 +140,7 @@ export class Lecture extends PureComponent {
                         <Grid.Column>
                             <Dropdown fluid={true}
                                       selection
-                                      options={this.state.groups.map((group, index) => (
+                                      options={this.props.groups.map((group, index) => (
                                               {
                                                   key: index, text: group.Num, value: group.GrpPk
                                               }
@@ -170,7 +155,7 @@ export class Lecture extends PureComponent {
                         <Grid.Column>
                             <Dropdown fluid={true}
                                       selection
-                                      options={this.state.subjects.map((subject, index) => (
+                                      options={this.props.subjects.map((subject, index) => (
                                               {
                                                   key: index, text: subject.Name, value: subject.SbjPk
                                               }
@@ -185,7 +170,7 @@ export class Lecture extends PureComponent {
                         <Grid.Column>
                             <Dropdown fluid={true}
                                       selection
-                                      options={this.state.rooms.map((room, index) => (
+                                      options={this.props.rooms.map((room, index) => (
                                               {
                                                   key: index, text: room.Num, value: room.RomPk
                                               }
@@ -212,18 +197,7 @@ export class Lecture extends PureComponent {
                                     SubjectId: this.state.SubjectId
                                 }
                             }, () => {
-                                Lecture.addLecture(this.state.newItemLecture)
-                                this.setState({
-                                    newItemLecture: {
-                                        Day: '',
-                                        Week: '',
-                                        Lesson: '',
-                                        TeacherId: '',
-                                        GroupId: '',
-                                        RoomId: '',
-                                        SubjectId: ''
-                                    }
-                                });
+                                this.addLecture()
                             })
                         }}>Save</Button></Grid.Row>
                 </Grid>
@@ -242,7 +216,7 @@ export class Lecture extends PureComponent {
                         </Table.Row>
                     </Table.Header>
                     <Table.Body>
-                        {this.state.lectures.map((lecture, index) => (
+                        {this.props.lectures.map((lecture, index) => (
                                 <Table.Row key={index}>
                                     <Table.Cell textAlign='center'>{lecture.LctPk}</Table.Cell>
                                     <Table.Cell textAlign='center'>{lecture.Day}</Table.Cell>
@@ -254,7 +228,7 @@ export class Lecture extends PureComponent {
                                     <Table.Cell textAlign='center'>{lecture.SubjectId}</Table.Cell>
                                     <Table.Cell textAlign='center'>
                                     <span className="delete-shadow" onClick={() => {
-                                        this.removeLecture(lecture.LctPk)
+                                        this.removeLecture(lecture)
                                     }}> {'🗑'}</span>
                                     </Table.Cell>
                                 </Table.Row>
@@ -268,3 +242,20 @@ export class Lecture extends PureComponent {
         );
     }
 }
+export default connect(state => ({
+        lectures: state.lectures.listLectures,
+        groups: state.groups.listGroups,
+        teachers: state.teachers.listTeachers,
+        rooms: state.rooms.listRooms,
+        subjects: state.subjects.listSubjects
+}),
+    dispatch => ({
+        AddLecture: (lecture) => dispatch(addLecture(lecture)),
+        GetLecture: () => dispatch(getLectures()),
+        GetRoomL: () => dispatch(getRooms()),
+        GetTeacherL: () => dispatch(getTeachers()),
+        GetSubjectL: () => dispatch(getSubjects()),
+        GetGroupL: () => dispatch(getGroups()),
+        RemoveLecture: (id) => dispatch(deleteLecture(id)),
+    })
+)(LectureWithRedux);

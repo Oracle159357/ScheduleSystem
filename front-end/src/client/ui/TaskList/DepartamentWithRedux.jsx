@@ -1,25 +1,13 @@
+import React, {PureComponent} from 'react';
+import {connect} from 'react-redux'
+import {getDepartaments, addDepartament, deleteDepartament, addGroup, addTeacher , chngDepartament} from "../../thunks/departaments";
 
-
-
-
-
-import {PureComponent} from "react";
-import {
-    changeDepartament,
-    getAllDepartament,
-    insertDepartament,
-    insertGroup,
-    insertTeacher,
-    removeDepartament
-} from "../../api/fetchOfData";
-import React from "react";
 import {Button, Form, Grid, Header, Input, Modal, Table} from "semantic-ui-react";
 
-export class Departament extends PureComponent {
+export class DepartamentWithRedux extends PureComponent {
     constructor(props) {
         super(props);
         this.state = {
-            departaments: [],
             newItemDepartment: {Name: '', Building: ''},
             newItemChangeDepartment: {Name: '', Building: ''},
             newItemGroup: {Course: '', Num: ''},
@@ -27,45 +15,60 @@ export class Departament extends PureComponent {
             currentDepartamentTeacher: undefined,
             currentDepartamentGroup: undefined,
             currentDepartamentChange: undefined,
-        }
+        };
     }
 
+    componentDidMount() {
+        this.loadDepartament()
+    };
+
+    loadDepartament() {
+        this.props.onGetDepartament();
+    }
+
+    addDepartament = () => {
+        this.props.AddDepartament(this.state.newItemDepartment)
+        this.setState({newItemDepartment: {Name: '', Building: ''}});
+    };
+    changeDepartament = () => {
+        this.props.ChangeDepartament(this.state.newItemChangeDepartment)
+        this.closeModalChangeDepartament();
+        this.setState({
+                newItemChangeDepartment: {
+                    Name: '',
+                    Building: '',
+                }
+            }
+        );
+    };
+
+
+    addGroup = () => {
+        this.props.AddGroup(this.state.newItemGroup)
+        this.closeModalGroup();
+        this.setState({
+            newItemGroup: {
+                Course: '', Num: 0,
+            }
+        });
+    };
+    addTeacher = () => {
+        this.props.AddTeacher(this.state.newItemTeacher)
+        this.closeModalTeacher();
+        this.setState({
+            newItemTeacher: {
+                Name: '',
+                Surname: '',
+                Patronymic: '',
+            }
+        });
+    };
+    removeDepartament = (department) => {
+        this.props.RemoveDepartament(department.DepPk)
+    };
     closeModalGroup = () => this.setState({currentDepartamentGroup: undefined});
     closeModalTeacher = () => this.setState({currentDepartamentTeacher: undefined});
     closeModalChangeDepartament = () => this.setState({currentDepartamentChange: undefined});
-
-    async componentDidMount() {
-        await this.loadDepartament()
-    };
-
-    async loadDepartament() {
-        let departaments = await getAllDepartament();
-        departaments.sort((x, y) => -y.DepPk + x.DepPk);
-        this.setState({departaments});
-    }
-
-    async addDepartament(departament) {
-        await insertDepartament(departament)
-        await this.loadDepartament()
-    }
-
-    static async addTeacher(teacher) {
-        await insertTeacher(teacher)
-    }
-
-    static async addGroup(group) {
-        await insertGroup(group)
-    }
-
-    async changeDepartament(departament) {
-        await changeDepartament(departament);
-        await this.loadDepartament()
-    }
-
-    async removeDepartament(Id) {
-        await removeDepartament(Id);
-        await this.loadDepartament()
-    }
 
     render() {
         const {
@@ -109,12 +112,7 @@ export class Departament extends PureComponent {
                             />
                         </Grid.Column>
                         <Grid.Column>
-                            <Button positive onClick={() => {
-                                this.addDepartament(this.state.newItemDepartment);
-                                this.setState({newItemDepartment: {Name: '', Building: ''}});
-                            }
-                            }
-                            >ADD</Button>
+                            <Button positive onClick={() => this.addDepartament()}>ADD</Button>
                         </Grid.Column>
                     </Grid.Row>
                 </Grid>
@@ -131,31 +129,33 @@ export class Departament extends PureComponent {
                         </Table.Row>
                     </Table.Header>
                     <Table.Body>
-                        {this.state.departaments.map((departament, index) => (
-                            <Table.Row key={index}>
-                                <Table.Cell textAlign='center'>{departament.DepPk}</Table.Cell>
-                                <Table.Cell textAlign='center'>{departament.Name}</Table.Cell>
-                                <Table.Cell textAlign='center'>{departament.Building}</Table.Cell>
-                                <Table.Cell textAlign='center'>
-                                    <Button positive type='button'
-                                            onClick={() => this.setState({currentDepartamentGroup: departament})}>-</Button></Table.Cell>
-                                <Table.Cell textAlign='center'>
-                                    <Button positive type='button'
-                                            onClick={() => this.setState({currentDepartamentTeacher: departament})}>+</Button>
-                                </Table.Cell>
-                                <Table.Cell textAlign='center'>
-                                    <Button positive type='button'
-                                            onClick={
-                                                () => this.setState({currentDepartamentChange: departament})}>✎</Button>
+                        {(this.props.departament &&
+                            this.props.departament.map((departament, index) => (
+                                <Table.Row key={index}>
+                                    <Table.Cell textAlign='center'>{departament.DepPk}</Table.Cell>
+                                    <Table.Cell textAlign='center'>{departament.Name}</Table.Cell>
+                                    <Table.Cell textAlign='center'>{departament.Building}</Table.Cell>
+                                    <Table.Cell textAlign='center'>
+                                        <Button positive type='button'
+                                                onClick={() => this.setState({currentDepartamentGroup: departament})}>-</Button></Table.Cell>
+                                    <Table.Cell textAlign='center'>
+                                        <Button positive type='button'
+                                                onClick={() => this.setState({currentDepartamentTeacher: departament})}>+</Button>
+                                    </Table.Cell>
+                                    <Table.Cell textAlign='center'>
+                                        <Button positive type='button'
+                                                onClick={
+                                                    () => this.setState({currentDepartamentChange: departament})}>✎</Button>
 
-                                </Table.Cell>
-                                <Table.Cell textAlign='center'>
+                                    </Table.Cell>
+                                    <Table.Cell textAlign='center'>
                                     <span className="delete-shadow" onClick={() => {
-                                        this.removeDepartament(departament.DepPk)
+                                        debugger
+                                        this.removeDepartament(departament)
                                     }}> {'🗑'}</span>
-                                </Table.Cell>
-                            </Table.Row>
-                        ))
+                                    </Table.Cell>
+                                </Table.Row>
+                            )))
                         }
                     </Table.Body>
                 </Table>
@@ -194,14 +194,8 @@ export class Departament extends PureComponent {
                                         DepartamentId: this.state.currentDepartamentGroup.DepPk
                                     }
                                 }, () => {
-                                    Departament.addGroup(this.state.newItemGroup),
-                                        this.closeModalGroup();
-                                    this.setState({
-                                        newItemGroup: {
-                                            Course: '',
-                                            Num: 0,
-                                        }
-                                    });
+                                    this.addGroup.bind(this)() // bind здесь вообще почти ничгде не нужен, так как он нужен только тогда когда ты не используешь стрелочные функции/
+
                                 });
                             }}>Save</Button>
                         </Form>
@@ -261,15 +255,7 @@ export class Departament extends PureComponent {
                                         DepartamentId: this.state.currentDepartamentTeacher.DepPk
                                     }
                                 }, () => {
-                                    Departament.addTeacher(this.state.newItemTeacher)
-                                    this.closeModalTeacher();
-                                    this.setState({
-                                        newItemTeacher: {
-                                            Name: '',
-                                            Surname: '',
-                                            Patronymic: '',
-                                        }
-                                    });
+                                    this.addTeacher()
                                 })
                             }}>Save</Button>
                         </Form>
@@ -308,24 +294,16 @@ export class Departament extends PureComponent {
                                 }
                             />
                             <Button type='button' positive onClick={() => {
-                                this.setState({
-                                        newItemChangeDepartment: {
-                                            ...this.state.newItemChangeDepartment,
-                                            DepPk: this.state.currentDepartamentChange.DepPk
-                                        }
-                                    }, () => {
-                                        this.changeDepartament(this.state.newItemChangeDepartment),
-                                            this.closeModalChangeDepartament();
-                                        this.setState({
-                                                newItemChangeDepartment: {
-                                                    Name: '',
-                                                    Building: '',
-                                                }
-                                            }
-                                        );
-                                    }
-                                );
-                            }}>Save</Button>
+                            this.setState({
+                            newItemChangeDepartment: {
+                            ...this.state.newItemChangeDepartment,
+                            DepPk: this.state.currentDepartamentChange.DepPk
+                            }
+                            }, () => {
+                                this.changeDepartament()
+                            })
+                            }}
+                            >Save</Button>
                         </Form>
                     </Modal.Content>
                 </Modal>
@@ -333,3 +311,17 @@ export class Departament extends PureComponent {
         );
     }
 }
+
+export default connect(state => ({
+        departament: state.departaments.list
+    }),
+    dispatch => ({
+        AddDepartament: (departament) => dispatch(addDepartament(departament)),
+        ChangeDepartament : (departament) => dispatch(chngDepartament(departament)),
+        onGetDepartament: () => dispatch(getDepartaments()),
+        RemoveDepartament: (id) => dispatch(deleteDepartament(id)),
+        AddGroup: (group) => dispatch(addGroup(group)),
+        AddTeacher : (teacher) => dispatch(addTeacher(teacher))
+    })
+)(DepartamentWithRedux);
+

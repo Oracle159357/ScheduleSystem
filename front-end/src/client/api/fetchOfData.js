@@ -58,4 +58,4 @@ export const removeGroup = (id) => request(`http://localhost:8080/group/${id}`, 
 
 
 export const insertLecture = (lecture) => request(`http://localhost:8080/lecture/`, 'put',lecture);
-export const removeLecture1= (id) => request(`http://localhost:8080/lecture/${id}`, 'delete');
+export const removeLecture= (id) => request(`http://localhost:8080/lecture/${id}`, 'delete');

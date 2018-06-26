@@ -1,0 +1,182 @@
+import React, {PureComponent} from 'react';
+import {connect} from 'react-redux'
+import { getRooms, addRooms, chngRooms, deleteRooms} from "../../thunks/room";
+
+import {Button, Form, Grid, Header, Input, Modal, Table} from "semantic-ui-react";
+export class RoomWithRedux extends PureComponent {
+    constructor(props) {
+        super(props);
+        this.state = {
+            rooms: [],
+            currentRoomChange: undefined,
+            newItemChangeRoom: {Building: '', Num: '', RomPk: ''},
+            newItemRoom: {Building: '', Num: ''},
+        }
+    }
+
+    closeModalChangeRoom = () => this.setState({currentRoomChange: undefined})
+    componentDidMount() {
+        this.loadRoom()
+    };
+
+    loadRoom() {
+        this.props.GetRooms()
+    }
+    addRoom = () => {
+        this.props.AddRoom(this.state.newItemRoom)
+        this.setState({newItemRoom: {Name: '', Building: ''}});
+    };
+    changeRoom = () => {
+        this.props.ChangeRoom(this.state.newItemChangeRoom)
+        this.closeModalChangeRoom();
+        this.setState({
+                newItemChangeRoom: {
+                    Num: '',
+                    Building: '',
+                    RomPk: ''
+                }
+            }
+        );
+    };
+    removeRoom = (room) => {
+        this.props.RemoveRoom(room.RomPk)
+    };
+    render() {
+        const {
+            currentRoomChange,
+        } = this.state;
+        return (
+            <div className='task-list-container'>
+                {/*<div className='header'>*/}
+                {/*<Label size="big">Room</Label>*/}
+                {/*</div>*/}
+                <Grid columns={3}>
+                    <Grid.Row>
+                        <Grid.Column>
+                            <Input icon placeholder='Num' fluid={true} value={this.state.newItemRoom.Num}
+                                   type='number' min="1"
+                                   onChange={i =>
+                                       this.setState({
+                                               newItemRoom: {
+                                                   ...this.state.newItemRoom, Num: i.target.value
+                                               }
+                                           }
+                                       )
+                                   }
+                            />
+                        </Grid.Column>
+                        <Grid.Column>
+                            <Input icon placeholder='Building' fluid={true}
+                                   value={this.state.newItemRoom.Building}
+                                   type='text'
+                                   onChange={i =>
+                                       this.setState({
+                                               newItemRoom: {
+                                                   ...this.state.newItemRoom,
+                                                   Building: i.target.value
+                                               }
+                                           }
+                                       )
+                                   }
+                            />
+                        </Grid.Column>
+                        <Grid.Column>
+                            <Button positive onClick={() => {
+                                this.addRoom()
+                            }}>ADD</Button>
+                        </Grid.Column>
+                    </Grid.Row>
+                </Grid>
+                <Table celled structured>
+                    <Table.Header>
+                        <Table.Row textAlign='center'>
+                            <Table.HeaderCell rowSpan='1'>Id</Table.HeaderCell>
+                            <Table.HeaderCell rowSpan='1'>Num</Table.HeaderCell>
+                            <Table.HeaderCell rowSpan='1'>Building</Table.HeaderCell>
+                            <Table.HeaderCell rowSpan='1'>Change</Table.HeaderCell>
+                            <Table.HeaderCell rowSpan='1'>Delete</Table.HeaderCell>
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
+                        {this.props.rooms.map((room, index) => (
+                                <Table.Row key={index}>
+                                    <Table.Cell textAlign='center'>{room.RomPk}</Table.Cell>
+                                    <Table.Cell textAlign='center'>{room.Num}</Table.Cell>
+                                    <Table.Cell textAlign='center'>{room.Building}</Table.Cell>
+                                    <Table.Cell textAlign='center'>
+                                        <Button positive type='button'
+                                                onClick={() => this.setState({currentRoomChange: room})}>-</Button></Table.Cell>
+                                    <Table.Cell textAlign='center'>
+                                    <span className="delete-shadow" onClick={() => {
+                                        this.removeRoom(room)
+                                    }}> {'🗑'}</span>
+                                    </Table.Cell>
+                                </Table.Row>
+                            )
+                        )
+                        }
+                    </Table.Body>
+                </Table>
+                <Modal closeIcon onClose={this.closeModalChangeRoom} open={!!currentRoomChange}>
+                    <Header icon='archive' content='Change Room'/>
+                    <Modal.Content>
+                        <Form>
+                            <Form.Input
+                                label='Num'
+                                type='number' min="1"
+                                value={this.state.newItemChangeRoom.Num}
+                                onChange={i =>
+                                    this.setState({
+                                            newItemChangeRoom: {
+                                                ...this.state.newItemChangeRoom,
+                                                Num: i.target.value
+                                            }
+                                        }
+                                    )
+                                }
+                            />
+                            <Form.Input
+                                label='Building'
+                                type='text'
+                                value={this.state.newItemChangeRoom.Building}
+                                onChange={i =>
+                                    this.setState({
+                                            newItemChangeRoom: {
+                                                ...this.state.newItemChangeRoom,
+                                                Building: i.target.value
+                                            }
+                                        }
+                                    )
+                                }
+                            />
+                            <Button type='button' positive onClick={() => {
+                                this.setState({
+                                        newItemChangeRoom: {
+                                            ...this.state.newItemChangeRoom,
+                                            RomPk: this.state.currentRoomChange.RomPk
+                                        }
+                                    }, () => {
+                                        this.changeRoom()
+                                 }
+                                );
+
+
+                            }}>Save</Button>
+                        </Form>
+                    </Modal.Content>
+                </Modal>
+            </div>
+        );
+    }
+}
+
+export default connect(state => ({
+        rooms: state.rooms.listRooms
+    }),
+    dispatch => ({
+        AddRoom: (room) => dispatch(addRooms(room)),
+        ChangeRoom : (room) => dispatch(chngRooms(room)),
+        GetRooms: () => dispatch(getRooms()),
+        RemoveRoom: (id) => dispatch(deleteRooms(id))
+    })
+)(RoomWithRedux);

@@ -1,8 +1,10 @@
-import {PureComponent} from "react";
-import {changeGroup, getAllGroup, removeGroup} from "../../api/fetchOfData";
+import React, {PureComponent} from 'react';
+import {connect} from 'react-redux'
+
 import {Button, Form, Grid, Header, Input, Modal, Table} from "semantic-ui-react";
-import React from "react";
-export class Group extends PureComponent {
+import {deleteGroup, chngGroup, getGroups} from "../../thunks/group";
+
+export class GroupWithRedux extends PureComponent {
     constructor(props) {
         super(props);
 
@@ -13,31 +15,32 @@ export class Group extends PureComponent {
         }
     }
 
+    componentDidMount() {
+        this.loadGroup()
+    };
+
+    loadGroup() {
+        this.props.GetGroup();
+    }
+
     closeModalGroupTable = () => {
         this.setState({currentGroupChange: undefined})
     };
-
-    async componentDidMount() {
-        await this.loadGroup()
-    }
-
-    async loadGroup() {
-        let groups = await getAllGroup();
-        groups.sort((x, y) => -y.GrpPk + x.GrpPk);
-        this.setState({groups});
-    }
-
-    async changeGroup(group) {
-        console.log(group)
-        await changeGroup(group);
-        await this.loadGroup()
-    }
-
-    async removeGroup(Id) {
-        await removeGroup(Id);
-        await this.loadGroup()
-    }
-
+    changeGroup = () => {
+        this.props.ChangeGroup(this.state.newItemChangeGroup)
+        this.closeModalGroupTable();
+        this.setState({
+            newItemChangeGroup: {
+                Num: '',
+                Course: '',
+                DepartamentId: '',
+                GrpPk: ''
+            }
+        });
+    };
+    removeGroup = (group) => {
+        this.props.RemoveGroup(group.GrpPk)
+    };
 
     render() {
         const {
@@ -60,7 +63,7 @@ export class Group extends PureComponent {
                         </Table.Row>
                     </Table.Header>
                     <Table.Body>
-                        {this.state.groups.map((group, index) => (
+                        {this.props.groups.map((group, index) => (
                             <Table.Row key={index}>
                                 <Table.Cell textAlign='center'>{group.GrpPk}</Table.Cell>
                                 <Table.Cell textAlign='center'>{group.DepartamentId}</Table.Cell>
@@ -71,7 +74,7 @@ export class Group extends PureComponent {
                                             onClick={() => this.setState({currentGroupChange: group})}>-</Button></Table.Cell>
                                 <Table.Cell textAlign='center'>
                                     <span className="delete-shadow" onClick={() => {
-                                        this.removeGroup(group.GrpPk)
+                                        this.removeGroup(group)
                                     }}> {'🗑'}</span>
                                 </Table.Cell>
                             </Table.Row>
@@ -116,16 +119,7 @@ export class Group extends PureComponent {
                                         DepartamentId: this.state.currentGroupChange.DepartamentId
                                     }
                                 }, () => {
-                                    this.changeGroup(this.state.newItemChangeGroup)
-                                    this.closeModalGroupTable();
-                                    this.setState({
-                                        newItemChangeGroup: {
-                                            Num: '',
-                                            Course: '',
-                                            DepartamentId: '',
-                                            GrpPk: ''
-                                        }
-                                    });
+                                    this.changeGroup()
                                 })
                             }}>Save</Button>
                         </Form>
@@ -136,3 +130,13 @@ export class Group extends PureComponent {
         );
     }
 }
+
+export default connect(state => ({
+        groups: state.groups.listGroups
+    }),
+    dispatch => ({
+        ChangeGroup: (group) => dispatch(chngGroup(group)),
+        GetGroup: () => dispatch(getGroups()),
+        RemoveGroup: (id) => dispatch(deleteGroup(id)),
+    })
+)(GroupWithRedux);
